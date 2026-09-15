@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Urban Barber - Agendamento, Gestão & Estilo</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --card-bg: #1E1E1E;
+      --card-hover: #262626;
+      --accent-gold: #FFB800;
+      --accent-gold-light: rgba(255, 184, 0, 0.15);
+      --accent-hover: #D4AF37;
+      --text-main: #FFFFFF;
+      --text-muted: #A0A0A0;
+      --danger: #E74C3C;
+      --success: #2ECC71;
+      --wsp-color: #25D366;
+      --border-color: #2A2A2A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; }
+
+    .main-container { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Barra Superior de Usuário */
+    .user-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #181818;
+      padding: 12px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+    }
+    .user-info { font-size: 0.85rem; color: var(--text-muted); }
+    .user-info strong { color: var(--accent-gold); }
+    
+    .btn-action {
+      background: var(--accent-gold);
+      color: #000;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-action:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    
+    .btn-logout {
+      background: rgba(231, 76, 60, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: none;
+      font-weight: bold;
+    }
+
+    /* Menu de Navegação Principal */
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      background: #181818;
+      padding: 6px;
+      border-radius: 30px;
+      border: 1px solid var(--border-color);
+      align-self: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav-btn {
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: 0.3s;
+    }
+    .nav-btn.active { background: var(--accent-gold); color: #000; }
+
+    /* Seções/Páginas */
+    .page-section { display: none; width: 100%; flex-direction: column; gap: 20px; }
+    .page-section.active { display: flex; }
+
+    /* --- PÁGINA INICIAL / HOME --- */
+    .welcome-header {
+      background: linear-gradient(135deg, #1E1E1E 0%, #151515 100%);
+      border: 1px solid var(--border-color);
+      border-left: 5px solid var(--accent-gold);
+      border-radius: 16px;
+      padding: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .welcome-title h1 { font-size: 1.6rem; margin-bottom: 6px; font-weight: 800; }
+    .welcome-title h1 span { color: var(--accent-gold); }
+    .welcome-title p { color: var(--text-muted); font-size: 0.9rem; }
+
+    .features-grid, .mvv-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .feature-card, .mvv-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+    .feature-card:hover { transform: translateY(-3px); border-color: var(--accent-gold); background: var(--card-hover); }
+    .feature-icon { font-size: 2rem; margin-bottom: 10px; display: inline-block; }
+    .feature-card h3 { font-size: 1.05rem; margin-bottom: 6px; color: #FFF; }
+    .feature-card p, .mvv-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+    .tag-keyword {
+      display: inline-block;
+      background: var(--accent-gold-light);
+      color: var(--accent-gold);
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 10px;
+      margin-top: 10px;
+      text-transform: uppercase;
+    }
+
+    .banner-container {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      height: 180px;
+      border: 1px solid var(--border-color);
+    }
+    .banner-container img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.4); }
+    .banner-text { position: absolute; bottom: 20px; left: 20px; right: 20px; }
+    .banner-text h2 { font-size: 1.3rem; color: #FFF; font-weight: 800; }
+    .banner-text p { color: var(--accent-gold); font-size: 0.85rem; font-weight: 600; }
+
+    .mvv-card { text-align: center; position: relative; cursor: default; }
+    .mvv-card::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 40px; height: 3px; background: var(--accent-gold); }
+    .mvv-icon { font-size: 2.2rem; margin-bottom: 8px; }
+    .mvv-card h3 { font-size: 1rem; color: var(--accent-gold); margin-bottom: 8px; text-transform: uppercase; }
+
+    /* LAYOUTS E CARDS */
+    .main-wrapper { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+    @media (min-width: 850px) { .main-wrapper { grid-template-columns: 360px 1fr; } }
+
+    .app-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      border: 1px solid var(--border-color);
+    }
+    .logo-container { width: 100%; max-width: 260px; margin: 0 auto 10px auto; display: block; }
+
+    /* Formulários e Inputs */
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="number"], input[type="password"], textarea {
+      width: 100%; padding: 12px; background: #2A2A2A; border: 1px solid #3A3A3A; border-radius: 8px; color: #FFF; font-size: 0.9rem; outline: none;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    input:focus, textarea:focus { border-color: var(--accent-gold); }
+
+    .btn-submit { width: 100%; padding: 14px; background: var(--accent-gold); border: none; border-radius: 10px; color: #000; font-weight: bold; font-size: 0.95rem; cursor: pointer; text-transform: uppercase; margin-top: 10px; transition: 0.3s; }
+    .btn-submit:hover { background: var(--accent-hover); }
+
+    /* Serviços e Horários */
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .service-card { background: #2A2A2A; border: 2px solid #3A3A3A; border-radius: 10px; overflow: hidden; cursor: pointer; position: relative; }
+    .service-card img { width: 100%; height: 75px; object-fit: cover; }
+    .service-card-info { padding: 8px; text-align: center; }
+    .service-card-info strong { display: block; font-size: 0.85rem; color: #FFF; }
+    .service-card-info span { font-size: 0.8rem; color: var(--accent-gold); font-weight: bold; }
+    .service-card input[type="radio"] { position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer; }
+    .service-card:has(input[type="radio"]:checked) { border-color: var(--accent-gold); background: rgba(255, 184, 0, 0.1); }
+
+    .time-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; }
+    .time-btn { position: relative; background: #2A2A2A; border: 1px solid #3A3A3A; border-radius: 8px; padding: 10px 0; text-align: center; cursor: pointer; }
+    .time-btn span { font-size: 0.85rem; font-weight: bold; color: #FFF; }
+    .time-btn input[type="radio"] { position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer; }
+    .time-btn:has(input[type="radio"]:checked) { border-color: var(--accent-gold); background: var(--accent-gold); }
+    .time-btn:has(input[type="radio"]:checked) span { color: #000; }
+
+    /* Chat e Avaliações */
+    .section-title { font-size: 1rem; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 14px; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+    .chat-box { background: #181818; border: 1px solid var(--border-color); border-radius: 14px; height: 240px; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; margin-bottom: 20px; }
+    .chat-messages { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { max-width: 80%; padding: 8px 12px; border-radius: 10px; font-size: 0.85rem; line-height: 1.3; }
+    .msg-client { background: #2A2A2A; color: #FFF; align-self: flex-start; }
+    .msg-barber { background: var(--accent-gold); color: #000; align-self: flex-end; font-weight: 500; }
+    .chat-input { display: flex; gap: 8px; margin-top: 10px; }
+    .chat-input input { flex: 1; padding: 10px; background: #2A2A2A; border: 1px solid #3A3A3A; border-radius: 8px; color: #FFF; font-size: 0.85rem; }
+    .chat-input button { background: var(--accent-gold); border: none; padding: 0 16px; border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; }
+
+    .reviews-list { display: flex; flex-direction: column; gap: 12px; max-height: 260px; overflow-y: auto; margin-bottom: 16px; }
+    .review-card { background: #181818; border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; }
+    .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .review-author { font-size: 0.85rem; font-weight: bold; color: #FFF; }
+    .review-stars { color: var(--accent-gold); font-size: 0.8rem; }
+    .review-text { font-size: 0.8rem; color: var(--text-muted); line-height: 1.3; }
+    .review-tag { display: inline-block; background: rgba(255, 184, 0, 0.15); color: var(--accent-gold); font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-top: 6px; font-weight: bold; text-transform: uppercase; }
+
+    /* Painel do Barbeiro */
+    .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { background: #181818; padding: 16px; border-radius: 12px; border-left: 4px solid var(--accent-gold); border: 1px solid var(--border-color); }
+    .kpi-card h3 { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+    .kpi-card p { font-size: 1.4rem; font-weight: bold; color: var(--success); margin-top: 4px; }
+    .admin-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 850px) { .admin-grid { grid-template-columns: 1fr 1fr; } }
+    .card-item { background: #2A2A2A; padding: 12px 14px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--accent-gold); }
+    .card-info strong { display: block; font-size: 0.9rem; color: #FFF; }
+    .card-info span { font-size: 0.8rem; color: var(--text-muted); }
+    .card-info .valor { color: var(--success); font-weight: bold; }
+    .btn-wsp { background: rgba(37, 211, 102, 0.2); border: 1px solid var(--wsp-color); color: var(--wsp-color); padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 0.75rem; font-weight: bold; }
+
+    /* Modal de Login / Cadastro */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s; }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .auth-card { background: var(--card-bg); width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; border: 1px solid #3A3A3A; position: relative; }
+    .auth-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #3A3A3A; padding-bottom: 10px; }
+    .auth-tab { color: var(--text-muted); background: none; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+    .auth-tab.active { color: var(--accent-gold); border-bottom: 2px solid var(--accent-gold); }
+    .role-selector { display: flex; gap: 10px; margin-bottom: 16px; }
+    .role-btn { flex: 1; padding: 10px; background: #2A2A2A; border: 1px solid #3A3A3A; border-radius: 8px; color: #FFF; font-size: 0.8rem; cursor: pointer; text-align: center; }
+    .role-btn.selected { border-color: var(--accent-gold); background: rgba(255, 184, 0, 0.15); color: var(--accent-gold); font-weight: bold; }
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Barra de Estado do Usuário -->
+    <div class="user-bar">
+      <div class="user-info" id="user-display">
+        Status: <span>Visitante (Não Logado)</span>
+      </div>
+      <div>
+        <button class="btn-action" id="btn-open-login" onclick="openAuthModal()">Entrar / Cadastrar</button>
+        <button class="btn-logout" id="btn-logout" onclick="logout()">Sair</button>
+      </div>
+    </div>
+
+    <!-- Navegação em Abas Principal -->
+    <div class="nav-tabs">
+      <button class="nav-btn active" id="tab-nav-home" onclick="switchPage('home-page')">🏠 Início</button>
+      <button class="nav-btn" id="tab-nav-client" onclick="switchPage('client-page')">🙋‍♂️ Agendar Corte</button>
+      <button class="nav-btn" id="tab-nav-barber" onclick="switchPage('barber-page')">💈 Área do Barbeiro</button>
+    </div>
+
+    <!-- SEÇÃO 1: PÁGINA INICIAL / BOAS-VINDAS -->
+    <div id="home-page" class="page-section active">
+      <div class="welcome-header">
+        <div class="welcome-title">
+          <h1>Bem-vindo à <span>Urban Barber</span>! ✂️</h1>
+          <p>Sua plataforma de agendamento rápido e gestão inteligente de estilo.</p>
+        </div>
+        <button class="btn-action" onclick="switchPage('client-page')">Agendar Agora ➔</button>
+      </div>
+
+      <div class="section-title">🚀 O Que é o Urban Barber?</div>
+      <div class="features-grid">
+        <div class="feature-card" onclick="switchPage('client-page')">
+          <span class="feature-icon">⚡</span>
+          <h3>Agendamento Instantâneo</h3>
+          <p>Escolha o profissional, serviço, data e horário ideal em segundos, sem complicações ou filas.</p>
+          <span class="tag-keyword">#Praticidade</span>
+        </div>
+        <div class="feature-card" onclick="switchPage('barber-page')">
+          <span class="feature-icon">💈</span>
+          <h3>Gestão para Barbeiros</h3>
+          <p>Controle completo do seu faturamento diário, horários e histórico de clientes em tempo real.</p>
+          <span class="tag-keyword">#Eficiência</span>
+        </div>
+        <div class="feature-card" onclick="switchPage('client-page')">
+          <span class="feature-icon">💬</span>
+          <h3>Comunicação Integrada</h3>
+          <p>Chat direto de suporte e envio facilitado de confirmação através do WhatsApp.</p>
+          <span class="tag-keyword">#Conectividade</span>
+        </div>
+      </div>
+
+      <div class="banner-container">
+        <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80" alt="Ferramentas">
+        <div class="banner-text">
+          <h2>Mais que um corte, uma experiência de estilo.</h2>
+          <p>PRECISÃO • ESTILO • TECNOLOGIA • EXCLUSIVIDADE</p>
+        </div>
+      </div>
+
+      <div class="section-title">🏛️ Nossa Essência</div>
+      <div class="mvv-container">
+        <div class="mvv-card">
+          <div class="mvv-icon">🎯</div>
+          <h3>Missão</h3>
+          <p>Revolucionar o agendamento em barbearias, oferecendo tecnologia e conveniência para clientes e profissionais.</p>
+        </div>
+        <div class="mvv-card">
+          <div class="mvv-icon">👁️</div>
+          <h3>Visão</h3>
+          <p>Ser a plataforma referência no Brasil em gestão de barbearias e valorização do estilo masculino.</p>
+        </div>
+        <div class="mvv-card">
+          <div class="mvv-icon">⭐</div>
+          <h3>Valores</h3>
+          <p><strong>Excelência:</strong> Cuidado no corte.<br><strong>Inovação:</strong> Tecnologia inteligente.<br><strong>Respeito:</strong> Valorização do cliente.</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- SEÇÃO 2: ÁREA DO CLIENTE -->
+    <div id="client-page" class="page-section">
+      <div class="main-wrapper">
+        
+        <!-- Chat + Avaliações -->
+        <div class="app-card">
+          <div class="logo-container">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 160" width="100%">
+              <defs>
+                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FFE082" />
+                  <stop offset="50%" stop-color="#FFB800" />
+                  <stop offset="100%" stop-color="#B78103" />
+                </linearGradient>
+              </defs>
+              <g transform="translate(30, 15)">
+                <path d="M 30,10 L 80,10 L 95,50 L 80,110 L 30,110 L 15,50 Z" fill="none" stroke="url(#goldGradient)" stroke-width="2" opacity="0.3"/>
+                <path d="M 35,25 L 35,70 C 35,90 75,90 75,70 L 75,25" fill="none" stroke="url(#goldGradient)" stroke-width="7" stroke-linecap="round"/>
+                <path d="M 45,20 L 85,20 L 75,35 L 35,35 Z" fill="url(#goldGradient)" />
+                <circle cx="55" cy="72" r="4" fill="#FFFFFF" />
+              </g>
+              <text x="150" y="75" font-family="'Segoe UI', sans-serif" font-size="48" font-weight="900" letter-spacing="5" fill="url(#goldGradient)">URBAN</text>
+              <text x="155" y="108" font-family="'Segoe UI', sans-serif" font-size="18" font-weight="300" letter-spacing="12" fill="#F4F4F4" opacity="0.9">BARBER</text>
+            </svg>
+          </div>
+
+          <div class="section-title">💬 Chat com a Barbearia</div>
+          <div class="chat-box">
+            <div class="chat-messages" id="client-chat-msgs">
+              <div class="chat-msg msg-barber">Olá! Como podemos ajudar você hoje?</div>
+            </div>
+            <div class="chat-input">
+              <input type="text" id="client-chat-input" placeholder="Digite sua mensagem...">
+              <button type="button" onclick="sendClientMsg()">Enviar</button>
+            </div>
+          </div>
+
+          <div class="section-title">⭐ Recomendações dos Clientes</div>
+          <div class="reviews-list" id="client-reviews-container">
+            <div class="review-card">
+              <div class="review-header">
+                <span class="review-author">Matheus Lima</span>
+                <span class="review-stars">★ ★ ★ ★ ★</span>
+              </div>
+              <p class="review-text">"Corte fantástico! O agendamento pelo app evitou qualquer espera."</p>
+              <span class="review-tag">Cliente Frequente</span>
+            </div>
+          </div>
+
+          <form onsubmit="addClientReview(event)">
+            <div class="form-group">
+              <label>Deixe seu Elogio ou Avaliação</label>
+              <input type="text" id="rev-client-name" placeholder="Seu Nome" required style="margin-bottom: 8px;">
+              <textarea id="rev-client-text" placeholder="Escreva sua experiência..." required></textarea>
+            </div>
+            <button type="submit" class="btn-submit" style="padding: 10px; font-size: 0.8rem;">Enviar Avaliação</button>
+          </form>
+        </div>
+
+        <!-- Formulário de Agendamento -->
+        <div class="app-card">
+          <div class="section-title">📅 Agendar seu Horário</div>
+          <form onsubmit="handleAppointmentSubmit(event)">
+            <div class="form-group">
+              <label for="c_nome">Seu Nome</label>
+              <input type="text" id="c_nome" placeholder="Digite seu nome completo" required>
+            </div>
+
+            <div class="form-group">
+              <label for="c_tel">WhatsApp</label>
+              <input type="tel" id="c_tel" placeholder="(11) 99999-9999" required>
+            </div>
+
+            <div class="form-group">
+              <label>Selecione o Serviço</label>
+              <div class="services-grid">
+                <div class="service-card">
+                  <input type="radio" name="srv" value="40" checked>
+                  <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=400&q=80" alt="Corte">
+                  <div class="service-card-info">
+                    <strong>Corte Moderno</strong>
+                    <span>R$ 40,00</span>
+                  </div>
+                </div>
+                <div class="service-card">
+                  <input type="radio" name="srv" value="30">
+                  <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=400&q=80" alt="Barba">
+                  <div class="service-card-info">
+                    <strong>Barba Completa</strong>
+                    <span>R$ 30,00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="c_data">Data</label>
+              <input type="date" id="c_data" required>
+            </div>
+
+            <div class="form-group">
+              <label>Horário</label>
+              <div class="time-grid">
+                <div class="time-btn"><input type="radio" name="hr" value="09:00" checked><span>09:00</span></div>
+                <div class="time-btn"><input type="radio" name="hr" value="10:00"><span>10:00</span></div>
+                <div class="time-btn"><input type="radio" name="hr" value="14:00"><span>14:00</span></div>
+                <div class="time-btn"><input type="radio" name="hr" value="15:00"><span>15:00</span></div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Confirmar Agendamento</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- SEÇÃO 3: ÁREA DO BARBEIRO -->
+    <div id="barber-page" class="page-section">
+      <div class="kpi-container">
+        <div class="kpi-card">
+          <h3>Faturamento Hoje</h3>
+          <p>R$ 280,00</p>
+        </div>
+        <div class="kpi-card">
+          <h3>Faturamento Mês</h3>
+          <p>R$ 3.450,00</p>
+        </div>
+        <div class="kpi-card">
+          <h3>Agendamentos Hoje</h3>
+          <p style="color: var(--accent-gold);">7 Clientes</p>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <!-- Lista de Clientes -->
+        <div class="app-card">
+          <div class="section-title">📅 Localizar Agendamentos</div>
+          <div class="form-group">
+            <input type="text" id="search-input" onkeyup="filterAppointments()" placeholder="🔍 Buscar por nome ou telefone...">
+          </div>
+          <div id="appointments-list">
+            <div class="card-item" data-name="Carlos Silva 11988887777">
+              <div class="card-info">
+                <strong>Carlos Silva</strong>
+                <span>Corte Moderno - <span class="valor">R$ 40,00</span></span><br>
+                <small style="color: var(--accent-gold);">Hoje às 09:00</small>
+              </div>
+              <a href="https://api.whatsapp.com/send?phone=5511988887777" target="_blank" class="btn-wsp">WhatsApp</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Barbeiro -->
+        <div class="app-card">
+          <div class="section-title">💬 Chat com Clientes</div>
+          <div class="chat-box">
+            <div class="chat-messages" id="barber-chat-msgs">
+              <div class="chat-msg msg-barber">Olá! Como podemos ajudar você hoje?</div>
+            </div>
+            <div class="chat-input">
+              <input type="text" id="barber-chat-input" placeholder="Responder cliente...">
+              <button type="button" onclick="sendBarberMsg()">Responder</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Depoimentos dos Barbeiros -->
+        <div class="app-card">
+          <div class="section-title">💈 Depoimento de Barbeiros</div>
+          <div class="reviews-list" id="barber-reviews-container">
+            <div class="review-card">
+              <div class="review-header">
+                <span class="review-author">Barbeiro Gabriel</span>
+                <span class="review-stars">★ ★ ★ ★ ★</span>
+              </div>
+              <p class="review-text">"Excelente aplicativo! Facilitou muito o controle diário dos meus cortes."</p>
+              <span class="review-tag">Barbeiro Parceiro</span>
+            </div>
+          </div>
+          <form onsubmit="addBarberReview(event)">
+            <div class="form-group">
+              <label>Deixe seu Depoimento sobre o App</label>
+              <input type="text" id="rev-barber-name" placeholder="Seu Nome / Barbearia" required style="margin-bottom: 8px;">
+              <textarea id="rev-barber-text" placeholder="Como o app te ajuda?" required></textarea>
+            </div>
+            <button type="submit" class="btn-submit" style="padding: 10px; font-size: 0.8rem;">Enviar Depoimento</button>
+          </form>
+        </div>
+
+        <!-- Configurações do Barbeiro -->
+        <div class="app-card">
+          <div class="section-title">✂️ Configurar Serviços</div>
+          <form onsubmit="event.preventDefault(); alert('Configurações salvas com sucesso!');">
+            <div class="form-group">
+              <label>Nome do Serviço</label>
+              <input type="text" value="Corte Moderno / Fade" required>
+            </div>
+            <div class="form-group">
+              <label>Preço (R$)</label>
+              <input type="number" value="40.00" step="0.01" required>
+            </div>
+            <button type="submit" class="btn-submit" style="padding: 10px;">Salvar Alterações</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE LOGIN / CADASTRO -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="auth-card">
+      <button type="button" class="close-modal" onclick="closeAuthModal()">✕</button>
+      
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">Entrar</button>
+        <button type="button" class="auth-tab" id="tab-register" onclick="setAuthTab('register')">Criar Conta</button>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuth(event)">
+        <div class="form-group">
+          <label>Eu sou:</label>
+          <div class="role-selector">
+            <div class="role-btn selected" id="role-client" onclick="selectRole('cliente')">🙋‍♂️ Cliente</div>
+            <div class="role-btn" id="role-barber" onclick="selectRole('barbeiro')">💈 Barbeiro</div>
+          </div>
+        </div>
+
+        <div class="form-group" id="group-name" style="display: none;">
+          <label>Nome Completo</label>
+          <input type="text" id="auth-name" placeholder="Seu Nome">
+        </div>
+
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="auth-email" placeholder="seuemail@email.com">
+        </div>
+
+        <div class="form-group" id="group-phone" style="display: none;">
+          <label>Telefone / WhatsApp</label>
+          <input type="tel" id="auth-phone" placeholder="(11) 99999-9999" pattern="[0-9() +-]{10,}" autocomplete="tel">
+        </div>
+
+        <div class="form-group">
+          <label>Senha</label>
+          <input type="password" id="auth-password" placeholder="••••••••" required>
+        </div>
+
+        <button type="submit" class="btn-submit" id="auth-submit-btn">Acessar Conta</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ESTADO DA APLICAÇÃO
+    let currentUser = null;
+    let authMode = 'login';
+    let selectedRole = 'cliente';
+
+    // ROTEAMENTO DE PÁGINAS SEM ERROS
+    function switchPage(pageId) {
+      // Bloqueia área do barbeiro se o usuário não for barbeiro
+      if (pageId === 'barber-page') {
+        if (!currentUser) {
+          alert("Acesso restrito! Por favor, faça login como Barbeiro para acessar esta área.");
+          selectRole('barbeiro');
+          openAuthModal();
+          return;
+        } else if (currentUser.role !== 'barbeiro') {
+          alert("Sua conta é de cliente. Alterne para uma conta de Barbeiro para acessar o painel.");
+          return;
+        }
+      }
+
+      // Esconde todas as seções
+      document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+      
+      // Remove estilo ativo de todos os botões do menu
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+      // Ativa a página desejada
+      const targetPage = document.getElementById(pageId);
+      if (targetPage) {
+        targetPage.classList.add('active');
+      }
+
+      // Ativa a aba do menu superior correspondente
+      if (pageId === 'home-page') document.getElementById('tab-nav-home').classList.add('active');
+      if (pageId === 'client-page') document.getElementById('tab-nav-client').classList.add('active');
+      if (pageId === 'barber-page') document.getElementById('tab-nav-barber').classList.add('active');
+
+      // Rola suavemente até o topo
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // CONTROLE DE AUTENTICAÇÃO
+    function openAuthModal() { 
+      document.getElementById('auth-modal').classList.add('active'); 
+    }
+    
+    function closeAuthModal() { 
+      document.getElementById('auth-modal').classList.remove('active'); 
+    }
+
+    function setAuthTab(tab) {
+      authMode = tab;
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('group-name').style.display = tab === 'register' ? 'block' : 'none';
+      document.getElementById('auth-name').required = tab === 'register';
+      document.getElementById('group-phone').style.display = tab === 'register' ? 'block' : 'none';
+      document.getElementById('auth-phone').required = tab === 'register';
+      document.getElementById('auth-email').required = tab === 'register';
+      document.getElementById('auth-submit-btn').innerText = tab === 'login' ? 'Acessar Conta' : 'Cadastrar';
+    }
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.getElementById('role-client').classList.toggle('selected', role === 'cliente');
+      document.getElementById('role-barber').classList.toggle('selected', role === 'barbeiro');
+    }
+
+    async function handleAuth(e) {
+      e.preventDefault();
+      const submitButton = document.getElementById('auth-submit-btn');
+      const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+      const payload = {
+        name: document.getElementById('auth-name').value,
+        email: document.getElementById('auth-email').value,
+        phone: document.getElementById('auth-phone').value,
+        password: document.getElementById('auth-password').value,
+        role: selectedRole
+      };
+
+      submitButton.disabled = true;
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          alert(result.error || 'Não foi possível validar seus dados.');
+          return;
+        }
+
+        currentUser = result.user;
+        updateUserUI();
+        closeAuthModal();
+
+        if (currentUser.role === 'barbeiro') {
+          switchPage('barber-page');
+        } else {
+          document.getElementById('c_nome').value = currentUser.name;
+          switchPage('client-page');
+        }
+      } catch (error) {
+        alert('Não foi possível conectar ao banco de dados. Inicie o servidor do projeto.');
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    function updateUserUI() {
+      const display = document.getElementById('user-display');
+      const loginBtn = document.getElementById('btn-open-login');
+      const logoutBtn = document.getElementById('btn-logout');
+
+      if (currentUser) {
+        display.innerHTML = `Logado como: <strong>${currentUser.name}</strong> (${currentUser.role})`;
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+      } else {
+        display.innerHTML = `Status: <span>Visitante (Não Logado)</span>`;
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      updateUserUI();
+      switchPage('home-page');
+      alert("Você saiu da sua conta.");
+    }
+
+    function handleAppointmentSubmit(e) {
+      e.preventDefault();
+      if (!currentUser) {
+        alert("Por favor, faça login para concluir seu agendamento.");
+        openAuthModal();
+        return;
+      }
+      alert(`Agendamento realizado com sucesso para ${currentUser.name}!`);
+    }
+
+    // BUSCA DE CLIENTES
+    function filterAppointments() {
+      const input = document.getElementById('search-input').value.toLowerCase();
+      const items = document.querySelectorAll('#appointments-list .card-item');
+      items.forEach(item => {
+        const text = item.getAttribute('data-name').toLowerCase();
+        item.style.display = text.includes(input) ? 'flex' : 'none';
+      });
+    }
+
+    // CHAT
+    function sendClientMsg() {
+      const input = document.getElementById('client-chat-input');
+      if (!input.value.trim()) return;
+      appendMsg('client-chat-msgs', input.value, 'msg-client');
+      appendMsg('barber-chat-msgs', input.value, 'msg-client');
+      input.value = '';
+    }
+
+    function sendBarberMsg() {
+      const input = document.getElementById('barber-chat-input');
+      if (!input.value.trim()) return;
+      appendMsg('barber-chat-msgs', input.value, 'msg-barber');
+      appendMsg('client-chat-msgs', input.value, 'msg-barber');
+      input.value = '';
+    }
+
+    function appendMsg(containerId, text, className) {
+      const container = document.getElementById(containerId);
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `chat-msg ${className}`;
+      msgDiv.innerText = text;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // RECOMENDAÇÕES / AVALIAÇÕES
+    function addClientReview(e) {
+      e.preventDefault();
+      const name = document.getElementById('rev-client-name').value;
+      const text = document.getElementById('rev-client-text').value;
+      const card = document.createElement('div');
+      card.className = 'review-card';
+      card.innerHTML = `<div class="review-header"><span class="review-author">${name}</span><span class="review-stars">★ ★ ★ ★ ★</span></div><p class="review-text">"${text}"</p><span class="review-tag">Cliente</span>`;
+      document.getElementById('client-reviews-container').prepend(card);
+      document.getElementById('rev-client-name').value = '';
+      document.getElementById('rev-client-text').value = '';
+      alert('Avaliação enviada com sucesso!');
+    }
+
+    function addBarberReview(e) {
+      e.preventDefault();
+      const name = document.getElementById('rev-barber-name').value;
+      const text = document.getElementById('rev-barber-text').value;
+      const card = document.createElement('div');
+      card.className = 'review-card';
+      card.innerHTML = `<div class="review-header"><span class="review-author">${name}</span><span class="review-stars">★ ★ ★ ★ ★</span></div><p class="review-text">"${text}"</p><span class="review-tag">Barbeiro</span>`;
+      document.getElementById('barber-reviews-container').prepend(card);
+      document.getElementById('rev-barber-name').value = '';
+      document.getElementById('rev-barber-text').value = '';
+      alert('Depoimento enviado com sucesso!');
+    }
+  </script>
+
+</body>
+</html>
