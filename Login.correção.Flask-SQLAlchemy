@@ -1,0 +1,35 @@
+from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///barbearia.db'
+app.config['SECRET_KEY'] = 'sua_chave_secreta'
+db = SQLAlchemy(app)
+
+# Modelo de Usuário (Clientes e Barbeiros)
+class Usuario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    senha = db.Column(db.String(200), nullable=False)
+    tipo = db.Column(db.String(20), nullable=False) # 'cliente' ou 'barbeiro'
+
+with app.app_context():
+    db.create_all()
+
+@app.route('/login', methods=['POST'])
+def login():
+    email = request.form.get('email')
+    senha = request.form.get('senha')
+    
+    usuario = Usuario.query.filter_by(email=email).first()
+    
+    if usuario and check_password_hash(usuario.senha, senha):
+        session['user_id'] = usuario.id
+        session['user_tipo'] = usuario.tipo
+        flash('Login realizado com sucesso!', 'success')
+        return redirect(url_for('dashboard'))
+    else:
+        flash('E-mail ou senha inválidos.', 'danger')
+        return redirect(url_for('index'))
