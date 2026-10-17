@@ -1,0 +1,6 @@
+class Agendamento(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cliente_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    barbeiro_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    data_hora = db.Column(db.DateTime, nullable=False)
+    servico = db.Column(db.String(100), nullable=False)
