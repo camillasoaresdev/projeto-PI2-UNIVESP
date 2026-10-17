@@ -1,0 +1,35 @@
+/* Estilos gerais para botões */
+button, .btn {
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    max-width: 100%;
+}
+
+/* Responsividade para Dispositivos Móveis (telas menores que 768px) */
+@media (max-width: 768px) {
+    /* Ajuste do container principal */
+    body {
+        padding: 10px;
+    }
+
+    /* Botões ocupam largura útil no mobile para facilitar o toque */
+    button, .btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    /* Ajuste da grade do calendário para telas pequenas */
+    .calendar-grid, .fc-view {
+        font-size: 12px;
+        overflow-x: auto;
+    }
+    
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+}
